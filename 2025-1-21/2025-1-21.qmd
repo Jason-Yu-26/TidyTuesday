@@ -1,0 +1,60 @@
+---
+title: "TidyTuesday"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r,echo=FALSE,message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(Matrix)
+```
+
+```{r}
+# Option 1: tidytuesdayR package 
+## install.packages("tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2025-01-21')
+## OR
+tuesdata <- tidytuesdayR::tt_load(2025, week = 3)
+
+exped_tidy <- tuesdata$exped_tidy
+peaks_tidy <- tuesdata$peaks_tidy
+
+# Option 2: Read directly from GitHub
+
+exped_tidy <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/exped_tidy.csv')
+peaks_tidy <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/peaks_tidy.csv')
+```
+
+```{r}
+#For those leaders who lead 7 and above expeditions, which leader has the most success rate?
+Leader_trials <- exped_tidy %>%
+  count(LEADERS)%>%
+  arrange(desc(n)) %>%
+  rename(number_of_trials=n) %>%
+  filter(number_of_trials>=7)
+
+leader_success <- exped_tidy %>%
+  filter(LEADERS %in% Leader_trials$LEADERS) %>%  #I want only the leaders showed above to continue in the following operations
+  mutate(success = SUCCESS1 | SUCCESS2 | SUCCESS3 | SUCCESS4) %>%  # see if success
+  group_by(LEADERS) %>%
+  summarize(
+    total_expeditions = n(),
+    successful_expeditions = sum(success),
+    success_rate = successful_expeditions / total_expeditions) %>%
+  arrange(desc(success_rate))
+
+leader_success %>%
+  ggplot(aes(reorder(LEADERS,success_rate),y=success_rate)) +
+  geom_col(fill = "#5F9EA0", color = "black") +
+  coord_flip()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Success Rate of Leaders with 7+ Expeditions",
+       x = "Leaders",
+       y = "Success Rate")
+```
