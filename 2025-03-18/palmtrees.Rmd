@@ -1,0 +1,59 @@
+---
+title: "Palmtree"
+author: "Jason Yu"
+date: "2025-03-21"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(janitor)
+library(forcats)
+library(stringr)
+library(lubridate)
+library(tidyverse)
+```
+
+
+#Questions: does palms of the same 
+
+```{r}
+palmtree<-read.csv("palmtrees.csv")
+print(palmtree)
+```
+
+```{r}
+palm_subfamily_counts <- palmtree %>% 
+  count(palm_subfamily, name = "sub_fam_count")
+
+palmtree <- palmtree %>%
+  left_join(palm_subfamily_counts, by = "palm_subfamily")
+
+mean_palmtree<-palmtree %>%
+  group_by(palm_subfamily,sub_fam_count) %>%
+  summarize(mean_max_stem_height=mean(max_stem_height_m,na.rm=TRUE),
+            mean_max_stem_dia   =mean(max_stem_dia_cm,na.rm=TRUE),
+            mean_max_leafnumber =mean(max_leaf_number,na.rm=TRUE),
+            mean_max_blade_len  =mean(max__blade__length_m,na.rm=TRUE),
+            mean_max_rachis_len =mean(max__rachis__length_m,na.rm=TRUE),
+            mean_max_petiole_len=mean(max__petiole_length_m,na.rm=TRUE),
+            mean_max_fruit_len  =mean(max_fruit_length_cm,na.rm=TRUE),
+            mean_max_fruit_width=mean(max_fruit_width_cm,na.rm=TRUE))
+
+longer_mean_palmtree <- mean_palmtree %>%
+  pivot_longer(cols = starts_with("mean_"), names_to = "measurement", values_to = "value")
+
+
+
+ggplot(longer_mean_palmtree, aes(x = palm_subfamily, y = value, fill = measurement)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean Measurements by Palm Subfamily",
+       x = "Palm Subfamily",
+       y = "Mean Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
