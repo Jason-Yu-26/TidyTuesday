@@ -1,0 +1,54 @@
+---
+title: "Tidytuesday513"
+author: "Jason Yu"
+date: "2025-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(readr)
+library(dplyr)
+```
+
+```{r}
+# Using R
+# Option 1: tidytuesdayR R package 
+## install.packages("tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2025-05-13')
+## OR
+tuesdata <- tidytuesdayR::tt_load(2025, week = 19)
+
+vesuvius <- tuesdata$vesuvius
+
+# Option 2: Read directly from GitHub
+
+vesuvius <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-05-13/vesuvius.csv')
+```
+```{r}
+#Data
+vesuvius <- read_csv("vesuvius.csv") %>%
+  filter(!is.na(latitude),!is.na(longitude),!is.na(depth_km), !is.na(duration_magnitude_md)) %>%
+  mutate(time = as.POSIXct(time, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
+
+vesuvius<-vesuvius %>%
+  mutate(duration_magnitude_md=round(duration_magnitude_md))
+
+
+# Scatter plot
+ggplot(vesuvius, aes(x = longitude, y = latitude))+
+  geom_point(aes(size = depth_km, color = duration_magnitude_md), alpha = 0.5)+
+  scale_size_continuous(name = "Depth(km)", range = c(1, 10))+
+  scale_color_viridis_c(name = "Duration Magnitude ") +
+  theme_minimal() +
+  labs(title= "Seismic Events around Mt Vesuvius",
+    x="Longitude (°)",
+    y="Latitude (°)")
+ 
+#I wanted to examine 1. does seismic events happen arbitrarily in Mt Vesuvius area and 2. whether there's a correlation between the depth and the magnitude of the duration of the earthquake. 
+# What I found from the visualization is that, we see clusters of points centered between 14.40-14.45 longtitude-wise and 40.81-40.83 latitude-wise with an outlier on the top left of the map. This suggests that a specific smaller region of the area is at the center of the earthquake belt instead of the entire Mt Vesuvius region. 
+#for the second question, there's no clear trend/color demonstrating a correlation between the duration maginitude and the depth where the earthquake is from, this suggests a more random result.
+```
+

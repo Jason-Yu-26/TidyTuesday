@@ -1,0 +1,38 @@
+---
+title: '506'
+author: "Jason Yu"
+date: "2025-05-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(readr)
+library(dplyr)
+```
+
+```{r}
+data<-read.csv("nsf_terminations.csv")
+
+data<-data %>%
+  mutate(
+    start_date=as.Date(nsf_startdate),
+    end_date =as.Date(nsf_expected_end_date),
+    days_between =end_date-start_date) %>%
+  filter(award_type =="Standard Grant"|award_type=="Continuing Grant") #filtering these two awards out because other categories barely have any data
+
+
+data %>%
+  ggplot(aes(x=days_between,y=usaspending_obligated))+
+  geom_point(aes(color = directorate_abbrev))+
+  geom_smooth(method = "loess",color = "steelblue", se= TRUE)+
+  scale_y_log10(labels = dollar_format()) +
+  facet_wrap(~ award_type, scales = "free_y") +
+  labs(color = "Directorate", x="Expected program length",y="Obligated Spending") 
+
+#I wanted to explore whether or not the length of the program impact on how much fund NSF offers.
+# According to the graphics, I notice that for the standard Grant, we do observe a upward positive correlation between the length of the programs and the expected funds the org should receive. Another thing to notice is that the directorates for Standard Grant are quite discrete, there's no certain directorate outstanding from others. Wheares in the case of Continuing Grant, from the loess regression, we observe that there's a level increase in the obligated spending when the project length is longer than 1500 days in total. Other than that, I also notice these programs that last longer than 1500 days most likely under the EDU directorate. 
+
+```
+
